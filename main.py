@@ -54,7 +54,9 @@ def move(rect,size,r):
             rect[i] = 0
             
 # Variables
-t = 0
+t = 1
+life = 16
+span = 4
 RectsR = []
 RectsG = []
 
@@ -62,14 +64,14 @@ RectsG = []
 for i in range(0,500):
     x = random.randrange(0,width,10)
     y = random.randrange(0,height,10)
-    RectsR.append([x,y,10,10])
-    pygame.draw.rect(screen,RED,RectsR[i])
+    RectsR.append([x,y,life])
+    pygame.draw.rect(screen,RED,[RectsR[i][0],RectsR[i][1],10,10])
     
 for i in range(0,500):
     x = random.randrange(0,width,10)
     y = random.randrange(0,height,10)
     RectsG.append([x,y,10,10])
-    pygame.draw.rect(screen,GREEN,RectsG[i])
+    pygame.draw.rect(screen,GREEN,[RectsR[i][0],RectsR[i][1],10,10])
     
 # -------- Main Program Loop -----------
 while not done:
@@ -79,27 +81,40 @@ while not done:
             done = True # Then close the window
     
     # --- Game logic should go here
-    for rect in RectsR:
+    for rect in RectsR: # moves all red rects
         r = random.randint(0,8)
         move(rect,size,r) 
     
-    for rect in RectsG:
+    for rect in RectsG: # moves all green rects
         r = random.randint(0,8)
         move(rect,size,r) 
         
+    for rectR in RectsR:
+        for rectG in RectsG:            
+            if rectR[0]==rectG[0]:
+                if rectR[1]==rectG[1]:
+                    RectsG.remove(rectG) # 'eats' green rects, spans red ones
+                    RectsR.append([rectR[0],rectR[1],life])
+            
+        rectR[2]-=1
+        if rectR[2] == 0:
+            RectsR.remove(rectR) # red ones die after thier life-span
+    
+    
+    
     # First, clear the screen to white. Don't put other drawing commands
     # above this, or they will be erased with this command.
     screen.fill(BLACK)
  
     # --- Drawing code should go here
     for rect in RectsR:
-        pygame.draw.rect(screen,RED,rect)
+        pygame.draw.rect(screen,RED,[rect[0],rect[1],10,10])
     for rect in RectsG:
-        pygame.draw.rect(screen,GREEN,rect)
+        pygame.draw.rect(screen,GREEN,[rect[0],rect[1],10,10])
+        
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
     # --- Limit to 60 frames per second
     clock.tick(5)
     t+=1
-    t%=5
