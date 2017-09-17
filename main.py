@@ -95,10 +95,16 @@ while not done:
                 if rectR[1]==rectG[1]:
                     RectsG.remove(rectG) # 'eats' green rects, spans red ones
                     RectsR.append([rectR[0],rectR[1],life])
-            
         rectR[2]-=1
         if rectR[2] == 0:
             RectsR.remove(rectR) # red ones die after thier life-span
+            
+    tmp = []
+    for rectG in RectsG:
+        if t % span == 0:
+            tmp.append([rectG[0],rectG[1],life])
+    RectsG.extend(tmp)
+    
     
     
     
@@ -116,5 +122,5 @@ while not done:
     pygame.display.flip()
  
     # --- Limit to 60 frames per second
-    clock.tick(5)
+    clock.tick(20)
     t+=1
