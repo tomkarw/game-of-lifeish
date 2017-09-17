@@ -1,22 +1,23 @@
 import sys, pygame, random
-from pygame.locals import *
+# from pygame.locals import *
+
 # Define some colors
 BLACK    = (   0,   0,   0)
 WHITE    = ( 255, 255, 255)
-GREEN    = (   0, 255,   0)
 RED      = ( 255,   0,   0)
+GREEN    = (   0, 255,   0)
 BLUE     = (   0,   0, 255)
-COLORS = BLACK,WHITE,GREEN,RED,BLUE
 
 # Set window parameters
 pygame.init()
 size = width, height = 680, 680
+pixel = 1
+pixWidth, pixHeight = width/pixel, height/pixel
 pygame.display.set_caption("Game of Life")
 screen = pygame.display.set_mode(size)
 keys_down = set()
 
-# Loop until the user clicks the close button.
-done = False
+
  
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
@@ -24,107 +25,147 @@ clock = pygame.time.Clock()
 # Lay seed for random fuctions
 random.seed
 
-# Functions
-def move(rect,size,r):
-    if r==1:
-        rect[1] -= 10
-    elif r==2:
-        rect[0] += 10
-        rect[1] -= 10
-    elif r==3:
-        rect[0] += 10
-    elif r==4:
-        rect[0] += 10
-        rect[1] += 10
-    elif r==5:
-        rect[1] += 10
-    elif r==6:
-        rect[0] -= 10
-        rect[1] += 10
-    elif r==7:
-        rect[0] -= 10
-    elif r==8:
-        rect[0] -= 10
-        rect[1] -= 10
-    
-    for i in (0,1):
-        if rect[i] < 0:
-            rect[i] = size[0]-10
-        elif rect[i] >= size[i]:
-            rect[i] = 0
-            
-# Variables
-t = 1
-life = 16
-span = 4
-RectsR = []
-RectsG = []
+# Classes
 
-# Pre-start set-up
-for i in range(0,500):
-    x = random.randrange(0,width,10)
-    y = random.randrange(0,height,10)
-    RectsR.append([x,y,life])
-    pygame.draw.rect(screen,RED,[RectsR[i][0],RectsR[i][1],10,10])
+class Blob:
+	"""Blob is a green or red block that moves around, repopulates, eats and dies"""
     
-for i in range(0,500):
-    x = random.randrange(0,width,10)
-    y = random.randrange(0,height,10)
-    RectsG.append([x,y,10,10])
-    pygame.draw.rect(screen,GREEN,[RectsR[i][0],RectsR[i][1],10,10])
+	def __init__(self, c, s, a=0):
+		self.colony = c
+		self.span = s
+		self.age = a
+        
     
+class TheMap:
+    """Map stores screen size as well as 3D array of Blobs, also includes funtions for interaction of Blobs"""
+    
+    def __init__(self,pixWidth,pixHeight):
+        """Initialises the map of given width and height"""
+        """SOMETHING WRONG HERE"""
+        self.pixWidth = pixWidth
+        self.pixHeight = pixHeight
+        
+        self.array = [ [ [ [] for z in range(0,2) ] for y in range(0,pixHeight) ] for x in range(0,pixWidth) ]
+        for i in range(0,500):
+            x = random.randrange(0,pixWidth)
+            y = random.randrange(0,pixHeight)
+            if self.array[x][y][0] is 0:
+                self.array[x][y][0] = Blob(0,life)
+            else:
+                i-=1
+
+        for i in range(0,500):
+            x = random.randrange(0,pixWidth)
+            y = random.randrange(0,pixHeight)
+            if self.array[x][y][0] is 0:
+                self.array[x][y][1] = Blob(1,life)
+            else:
+                i-=1
+        
+                  
+    def moveBlobs(self):
+        """Moves blobs randomly within provided screen size"""
+        
+        for i in range(0,2):
+            for x in range(0,self.pixWidth):
+                for y in range(0,self.pixHeight):
+                    if self.array[x][y][i] is not 0:
+						xx = x
+						yy = y
+						
+						while self.array[xx][yy][i] is not 0:
+							while True:
+								xx += random.choice([-1,0,1])
+								yy += random.choice([-1,0,1])
+								if not (xx is 0 and yy is 0):
+									break
+ 
+							if xx >= self.pixWidth:
+								xx = 0
+							elif xx < 0:
+								xx = self.pixWidth - 1
+							if yy >= self.pixHeight:
+								yy = 0
+							elif yy < 0:
+								yy = self.pixHeight - 1
+							print 'stuck in move'
+							
+						self.array[xx][yy][i] = self.array[x][y][i]
+						self.array[x][y][i] = 0
+						
+                        
+                    
+    def actBlobs(self):
+        """Checks if aggresive blobs ate something and kills the old ones """
+        for x in range(0,self.pixWidth):
+                for y in range(0,self.pixHeight):
+                    if self.array[x][y][0] is not 0 and self.array[x][y][1] is not 0:
+                        self.array[x][y][1] = 0
+                        self.array[x][y][0] = Blob(0,life)
+                    xx = x
+                    yy = y
+                   
+                    while self.array[xx][yy][0] is not 0:    
+                        while True:
+                            xx = random.choice([-1,0,1])
+                            yy = random.choice([-1,0,1])
+                            if not xx and yy is 0:
+                                break
+ 
+                        if xx > self.pixWidth:
+                            xx = 0
+                        elif xx < 0:
+                            xx = self.pixWidth - 1
+                        if yy > self.pixHeight:
+                            yy = 0
+                        elif yy < 0:
+                            yy = self.pixHeight - 1
+                        print 'stuck in act'
+                        
+                    self.array[xx][yy][0] = Blob(0,life)
+                    
+    def draw(self):
+        """Draws the map with blobs"""
+        for x in range(0,pixWidth):
+            for y in range(0,pixHeight):
+                if self.array[x][y][0] is not 0:
+                    pygame.draw.rect(screen,RED,[x*pixel,y*pixel,pixel,pixel])
+                elif self.array[x][y][1] is not 0:
+                    pygame.draw.rect(screen,GREEN,[x*pixel,y*pixel,pixel,pixel])
+            
+# Functions
+
+# Variables
+done = False    # loop until the user clicks the close button.
+t = 1			# turn count
+life = 12		# how many turns it takes for aggresive blob to die
+span = 5		# how many turns it takes for passive blob to reproduce
+
+# Pre-start set up
+theMap = TheMap(pixWidth,pixHeight)     # initalises theMap with blobs
+theMap.draw()
 # -------- Main Program Loop -----------
 while not done:
-    # --- Main event loop
-    for event in pygame.event.get(): # User did something
-        if event.type == pygame.KEYDOWN: # If user pushed any key
-            done = True # Then close the window
     
-    # --- Game logic should go here
-    for rect in RectsR: # moves all red rects
-        r = random.randint(0,8)
-        move(rect,size,r) 
+    # --- Event loop (not yet fully useful)
+    for event in pygame.event.get():        # did user do something
+        if event.type == pygame.KEYDOWN:    # if user pushed any key
+            done = True                     # then close the window
     
-    for rect in RectsG: # moves all green rects
-        r = random.randint(0,8)
-        move(rect,size,r) 
-        
-    for rectR in RectsR:
-        for rectG in RectsG:            
-            if rectR[0]==rectG[0]:
-                if rectR[1]==rectG[1]:
-                    RectsG.remove(rectG) # 'eats' green rects, spans red ones
-                    x = random.randint(-1,1)
-                    y = random.randint(-1,1)
-                    RectsR.append([rectR[0]+x*10,rectR[1]+y*10,life])
-        rectR[2]-=1
-        if rectR[2] == 0:
-            RectsR.remove(rectR) # red ones die after thier life-span
-            
-    tmp = []
-    for rectG in RectsG:
-        if t % span == 0:
-			x = random.randint(-1,1)
-			y = random.randint(-1,1)
-			tmp.append([rectG[0]+x*10,rectG[1]+y*10,life])
-    RectsG.extend(tmp)
+    # --- Game logic
+    theMap.moveBlobs()  # moves the Blobs around in the array
     
+    theMap.actBlobs()   # aggressive Blobs eat Green ones, they all reproduce
     
-    
-    
-    # First, clear the screen to white. Don't put other drawing commands
-    # above this, or they will be erased with this command.
+    # --- Clear the screen
     screen.fill(BLACK)
  
-    # --- Drawing code should go here
-    for rect in RectsR:
-        pygame.draw.rect(screen,RED,[rect[0],rect[1],10,10])
-    for rect in RectsG:
-        pygame.draw.rect(screen,GREEN,[rect[0],rect[1],10,10])
-        
-    # --- Go ahead and update the screen with what we've drawn.
+    # --- Drawing new screen
+    theMap.draw()
+    
+    # --- Update screen with what was drawn
     pygame.display.flip()
  
-    # --- Limit to 60 frames per second
-    clock.tick(20)
+    # --- Limits frames per second
+    clock.tick(30)
     t+=1
