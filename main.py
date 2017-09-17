@@ -15,9 +15,7 @@ pixWidth, pixHeight = width/pixel, height/pixel
 pygame.display.set_caption("Game of Life")
 screen = pygame.display.set_mode(size)
 keys_down = set()
-
-
- 
+myfont = pygame.font.SysFont("monospace", 25)
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
  
@@ -39,12 +37,14 @@ class TheMap:
     """Map stores screen size as well as 3D array of Blobs, also includes funtions for interaction of Blobs"""
     
     def __init__(self,pixWidth,pixHeight,pixel):
-        """Initialises the map of given width and height"""
+        """Initialises the map of given width and height with 500 Blobs of each species"""
         
         self.pixWidth = pixWidth
         self.pixHeight = pixHeight
         self.pixel = pixel
         self.turn = 0
+        
+        self.count = [500,500]
         
         self.array = [ [ [ [] for z in range(0,2) ] for y in range(0,pixHeight) ] for x in range(0,pixWidth) ]
         for i in range(0,500):
@@ -57,18 +57,19 @@ class TheMap:
             y = random.randrange(0,pixHeight)
             self.array[x][y][1].append(Blob(1,life))
                 
-        print 'init successful'
                   
     def moveBlobs(self):
         """Moves blobs randomly within provided screen size"""
         
         tmp_array = [ [ [ [] for z in range(0,2) ] for y in range(0,pixHeight) ] for x in range(0,pixWidth) ]
+        self.count = [0,0]
         
         for i in range(0,2):
             for x in range(0,self.pixWidth):
                 for y in range(0,self.pixHeight):
                     
                     while len(self.array[x][y][i]) > 0:
+                        self.count[i] += 1
                         
                         xx = x + random.choice([-1,0,1])
                         yy = y + random.choice([-1,0,1])
@@ -98,7 +99,7 @@ class TheMap:
                 for y in range(0,self.pixHeight):
                     for dying in self.array[x][y][0]:
                         dying.age += 1
-                        if dying.age > 12:
+                        if dying.age > life:
                             self.array[x][y][0].remove(dying)
                         
                     while len(self.array[x][y][0]) > 0 and len(self.array[x][y][1]) > 0:
@@ -125,7 +126,7 @@ class TheMap:
                         
                     while len(self.array[x][y][1]) > 0:
                         
-                        if self.turn % 5 == 0:    
+                        if random.randrange(0,100) < span_chance:    
                             xx = x + random.choice([-1,0,1])
                             yy = y + random.choice([-1,0,1])
                                 
@@ -168,11 +169,16 @@ class TheMap:
                 elif len(self.array[x][y][1]) > 0:
                     pygame.draw.rect(screen,[0,255,0],[x*self.pixel,y*self.pixel,self.pixel,self.pixel])
             
+        pygame.draw.rect(screen,[0,0,0],[0,0,250,50])
+        label = myfont.render("  Red blobs:" + str(self.count[0]), 1, RED)
+        screen.blit(label, (1, 1))
+        label = myfont.render("Green blobs:" + str(self.count[1]), 1, GREEN)
+        screen.blit(label, (1, 20))
 # Functions
 
 # Variables
-life = 12		# how many turns it takes for aggresive blob to die
-span = 5		# how many turns it takes for passive blob to reproduce
+life = 12		        # how many turns it takes for aggresive blob to die
+span_chance = 20		# percentage chance of green blob spanning offspring
 
 done = False
 RUNNING, PAUSE = 0,1
