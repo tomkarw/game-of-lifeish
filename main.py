@@ -94,7 +94,9 @@ while not done:
             if rectR[0]==rectG[0]:
                 if rectR[1]==rectG[1]:
                     RectsG.remove(rectG) # 'eats' green rects, spans red ones
-                    RectsR.append([rectR[0],rectR[1],life])
+                    x = random.randint(-1,1)
+                    y = random.randint(-1,1)
+                    RectsR.append([rectR[0]+x*10,rectR[1]+y*10,life])
         rectR[2]-=1
         if rectR[2] == 0:
             RectsR.remove(rectR) # red ones die after thier life-span
@@ -102,7 +104,9 @@ while not done:
     tmp = []
     for rectG in RectsG:
         if t % span == 0:
-            tmp.append([rectG[0],rectG[1],life])
+			x = random.randint(-1,1)
+			y = random.randint(-1,1)
+			tmp.append([rectG[0]+x*10,rectG[1]+y*10,life])
     RectsG.extend(tmp)
     
     
