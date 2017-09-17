@@ -49,19 +49,28 @@ def move(rect,size,r):
     
     for i in (0,1):
         if rect[i] < 0:
-            rect[i] = size[i]-10
+            rect[i] = size[0]-10
         elif rect[i] >= size[i]:
             rect[i] = 0
             
 # Variables
-
+t = 0
+RectsR = []
+RectsG = []
 
 # Pre-start set-up
-x = random.randrange(0,width,10)
-y = random.randrange(0,height,10)
-rect = [x,y,10,10]
-pygame.draw.rect(screen,RED,rect)
-        
+for i in range(0,500):
+    x = random.randrange(0,width,10)
+    y = random.randrange(0,height,10)
+    RectsR.append([x,y,10,10])
+    pygame.draw.rect(screen,RED,RectsR[i])
+    
+for i in range(0,500):
+    x = random.randrange(0,width,10)
+    y = random.randrange(0,height,10)
+    RectsG.append([x,y,10,10])
+    pygame.draw.rect(screen,GREEN,RectsG[i])
+    
 # -------- Main Program Loop -----------
 while not done:
     # --- Main event loop
@@ -70,17 +79,27 @@ while not done:
             done = True # Then close the window
     
     # --- Game logic should go here
-    r = random.randint(0,8)
-    move(rect,size,r) 
+    for rect in RectsR:
+        r = random.randint(0,8)
+        move(rect,size,r) 
+    
+    for rect in RectsG:
+        r = random.randint(0,8)
+        move(rect,size,r) 
+        
     # First, clear the screen to white. Don't put other drawing commands
     # above this, or they will be erased with this command.
     screen.fill(BLACK)
  
     # --- Drawing code should go here
-    pygame.draw.rect(screen,RED,rect)
-
+    for rect in RectsR:
+        pygame.draw.rect(screen,RED,rect)
+    for rect in RectsG:
+        pygame.draw.rect(screen,GREEN,rect)
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
     # --- Limit to 60 frames per second
-    clock.tick(20)
+    clock.tick(5)
+    t+=1
+    t%=5
