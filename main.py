@@ -11,7 +11,7 @@ BLUE     = (   0,   0, 255)
 # Set window parameters
 pygame.init()
 size = width, height = 680, 680
-pixel = 1
+pixel = 10
 pixWidth, pixHeight = width/pixel, height/pixel
 pygame.display.set_caption("Game of Life")
 screen = pygame.display.set_mode(size)
@@ -25,6 +25,9 @@ clock = pygame.time.Clock()
 # Lay seed for random fuctions
 random.seed
 
+# Kind-of inlines
+
+
 # Classes
 
 class Blob:
@@ -37,101 +40,124 @@ class Blob:
         
     
 class TheMap:
-    """Map stores screen size as well as 3D array of Blobs, also includes funtions for interaction of Blobs"""
+    """Map stores screen size as well as 3D array of Blobs lists, also includes funtions for interaction of Blobs"""
     
-    def __init__(self,pixWidth,pixHeight):
+    def __init__(self,pixWidth,pixHeight,pixel):
         """Initialises the map of given width and height"""
-        """SOMETHING WRONG HERE"""
+        
         self.pixWidth = pixWidth
         self.pixHeight = pixHeight
+        self.pixel = pixel
+        self.turn = 0
         
         self.array = [ [ [ [] for z in range(0,2) ] for y in range(0,pixHeight) ] for x in range(0,pixWidth) ]
         for i in range(0,500):
             x = random.randrange(0,pixWidth)
             y = random.randrange(0,pixHeight)
-            if self.array[x][y][0] is 0:
-                self.array[x][y][0] = Blob(0,life)
-            else:
-                i-=1
+            self.array[x][y][0].append(Blob(0,life))
 
         for i in range(0,500):
             x = random.randrange(0,pixWidth)
             y = random.randrange(0,pixHeight)
-            if self.array[x][y][0] is 0:
-                self.array[x][y][1] = Blob(1,life)
-            else:
-                i-=1
-        
+            self.array[x][y][1].append(Blob(1,life))
+                
+        print 'init successful'
                   
     def moveBlobs(self):
         """Moves blobs randomly within provided screen size"""
         
+        tmp_array = [ [ [ [] for z in range(0,2) ] for y in range(0,pixHeight) ] for x in range(0,pixWidth) ]
+        
         for i in range(0,2):
             for x in range(0,self.pixWidth):
                 for y in range(0,self.pixHeight):
-                    if self.array[x][y][i] is not 0:
-						xx = x
-						yy = y
-						
-						while self.array[xx][yy][i] is not 0:
-							while True:
-								xx += random.choice([-1,0,1])
-								yy += random.choice([-1,0,1])
-								if not (xx is 0 and yy is 0):
-									break
- 
-							if xx >= self.pixWidth:
-								xx = 0
-							elif xx < 0:
-								xx = self.pixWidth - 1
-							if yy >= self.pixHeight:
-								yy = 0
-							elif yy < 0:
-								yy = self.pixHeight - 1
-							print 'stuck in move'
-							
-						self.array[xx][yy][i] = self.array[x][y][i]
-						self.array[x][y][i] = 0
-						
-                        
                     
-    def actBlobs(self):
-        """Checks if aggresive blobs ate something and kills the old ones """
-        for x in range(0,self.pixWidth):
-                for y in range(0,self.pixHeight):
-                    if self.array[x][y][0] is not 0 and self.array[x][y][1] is not 0:
-                        self.array[x][y][1] = 0
-                        self.array[x][y][0] = Blob(0,life)
-                    xx = x
-                    yy = y
-                   
-                    while self.array[xx][yy][0] is not 0:    
-                        while True:
-                            xx = random.choice([-1,0,1])
-                            yy = random.choice([-1,0,1])
-                            if not xx and yy is 0:
-                                break
+                    while len(self.array[x][y][i]) > 0:
+                        
+                        xx = x + random.choice([-1,0,1])
+                        yy = y + random.choice([-1,0,1])
  
-                        if xx > self.pixWidth:
+                        if xx >= self.pixWidth:
                             xx = 0
                         elif xx < 0:
                             xx = self.pixWidth - 1
-                        if yy > self.pixHeight:
+                        if yy >= self.pixHeight:
                             yy = 0
                         elif yy < 0:
                             yy = self.pixHeight - 1
-                        print 'stuck in act'
+                        tmp_array[xx][yy][i].append(self.array[x][y][i].pop())
                         
-                    self.array[xx][yy][0] = Blob(0,life)
+        self.array = tmp_array
+        print 'move successful'
                     
-    def draw(self):
+    def actBlobs(self):
+        """Checks if aggresive blobs ate something and kills the old ones """
+        
+        tmp_array = [ [ [ [] for z in range(0,2) ] for y in range(0,pixHeight) ] for x in range(0,pixWidth) ]
+        
+        for x in range(0,self.pixWidth):
+                for y in range(0,self.pixHeight):
+                    for dying in self.array[x][y][0]:
+                        dying.age += 1
+                        if dying.age > 12:
+                            self.array[x][y][0].remove(dying)
+                        
+                    while len(self.array[x][y][0]) > 0 and len(self.array[x][y][1]) > 0:
+                        self.array[x][y][1].pop()
+                        tmp_array[x][y][0].append(self.array[x][y][0].pop())
+                    
+                        xx = x + random.choice([-1,0,1])
+                        yy = y + random.choice([-1,0,1])
+                        
+                        if xx >= self.pixWidth:
+                            xx = 0
+                        elif xx < 0:
+                            xx = self.pixWidth - 1
+                        if yy >= self.pixHeight:
+                            yy = 0
+                        elif yy < 0:
+                            yy = self.pixHeight - 1
+                        
+                        tmp_array[xx][yy][0].append(Blob(0,life))
+                    
+                    
+                        
+                    while len(self.array[x][y][1]) > 0:
+                        
+                        if self.turn % 5 == 0:    
+                            xx = x + random.choice([-1,0,1])
+                            yy = y + random.choice([-1,0,1])
+                                
+                            if xx >= self.pixWidth:
+                                xx = 0
+                            elif xx < 0:
+                                xx = self.pixWidth - 1
+                            if yy >= self.pixHeight:
+                                yy = 0
+                            elif yy < 0:
+                                yy = self.pixHeight - 1
+                                    
+                            tmp_array[xx][yy][1].append(self.array[x][y][1][-1])
+                            
+                        tmp_array[x][y][1].append(self.array[x][y][1].pop())
+                            
+                            
+                    while len(self.array[x][y][0]) > 0:
+                            tmp_array[x][y][0].append(self.array[x][y][0].pop())
+                            
+        self.array = tmp_array
+        self.turn += 1
+                    
+    def draw(self,screen):
         """Draws the map with blobs"""
-        for x in range(0,pixWidth):
-            for y in range(0,pixHeight):
-                if self.array[x][y][0] is not 0:
-                    pygame.draw.rect(screen,RED,[x*pixel,y*pixel,pixel,pixel])
-                elif self.array[x][y][1] is not 0:
-                    pygame.draw.rect(screen,GREEN,[x*pixel,y*pixel,pixel,pixel])
+        for x in range(0,self.pixWidth):
+            for y in range(0,self.pixHeight):
+                if len(self.array[x][y][0]) > 0:
+                    pygame.draw.rect(screen,[255,0,0],[x*self.pixel,y*self.pixel,self.pixel,self.pixel])
+                elif len(self.array[x][y][1]) > 0:
+                    pygame.draw.rect(screen,[0,255,0],[x*self.pixel,y*self.pixel,self.pixel,self.pixel])
+        
+        print 'draw successful'
             
 # Functions
 
@@ -142,16 +168,16 @@ life = 12		# how many turns it takes for aggresive blob to die
 span = 5		# how many turns it takes for passive blob to reproduce
 
 # Pre-start set up
-theMap = TheMap(pixWidth,pixHeight)     # initalises theMap with blobs
-theMap.draw()
+theMap = TheMap(pixWidth,pixHeight,pixel)     # initalises theMap with blobs
+theMap.draw(screen)
 # -------- Main Program Loop -----------
 while not done:
     
     # --- Event loop (not yet fully useful)
     for event in pygame.event.get():        # did user do something
         if event.type == pygame.KEYDOWN:    # if user pushed any key
-            done = True                     # then close the window
-    
+            while event.type in pygame.event.get() is not pygame.KEYDOWN:                     # then close the window
+                clock.tick(1)
     # --- Game logic
     theMap.moveBlobs()  # moves the Blobs around in the array
     
@@ -161,8 +187,8 @@ while not done:
     screen.fill(BLACK)
  
     # --- Drawing new screen
-    theMap.draw()
     
+    theMap.draw(screen)
     # --- Update screen with what was drawn
     pygame.display.flip()
  
