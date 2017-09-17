@@ -1,5 +1,4 @@
 import sys, pygame, random
-# from pygame.locals import *
 
 # Define some colors
 BLACK    = (   0,   0,   0)
@@ -25,9 +24,6 @@ clock = pygame.time.Clock()
 # Lay seed for random fuctions
 random.seed
 
-# Kind-of inlines
-
-
 # Classes
 
 class Blob:
@@ -40,7 +36,7 @@ class Blob:
         
     
 class TheMap:
-    """Map stores screen size as well as 3D array of Blobs lists, also includes funtions for interaction of Blobs"""
+    """Map stores screen size as well as 3D array of Blobs, also includes funtions for interaction of Blobs"""
     
     def __init__(self,pixWidth,pixHeight,pixel):
         """Initialises the map of given width and height"""
@@ -85,10 +81,13 @@ class TheMap:
                             yy = 0
                         elif yy < 0:
                             yy = self.pixHeight - 1
-                        tmp_array[xx][yy][i].append(self.array[x][y][i].pop())
+                        
+                        if len(tmp_array[xx][yy][i]) < 5:
+                            tmp_array[xx][yy][i].append(self.array[x][y][i].pop())
+                        else:
+                            break
                         
         self.array = tmp_array
-        print 'move successful'
                     
     def actBlobs(self):
         """Checks if aggresive blobs ate something and kills the old ones """
@@ -118,8 +117,10 @@ class TheMap:
                         elif yy < 0:
                             yy = self.pixHeight - 1
                         
-                        tmp_array[xx][yy][0].append(Blob(0,life))
-                    
+                        if len(tmp_array[xx][yy][0]) < 5:
+                            tmp_array[xx][yy][0].append(Blob(0,life))
+                        else:
+                            break
                     
                         
                     while len(self.array[x][y][1]) > 0:
@@ -136,15 +137,23 @@ class TheMap:
                                 yy = 0
                             elif yy < 0:
                                 yy = self.pixHeight - 1
-                                    
-                            tmp_array[xx][yy][1].append(self.array[x][y][1][-1])
                             
-                        tmp_array[x][y][1].append(self.array[x][y][1].pop())
-                            
+                            if len(tmp_array[xx][yy][1]) < 5:        
+                                tmp_array[xx][yy][1].append(self.array[x][y][1][-1])
+                            else:
+                                break
+                                
+                        if len(tmp_array[x][y][1]) < 5:    
+                            tmp_array[x][y][1].append(self.array[x][y][1].pop())
+                        else:
+                            break    
                             
                     while len(self.array[x][y][0]) > 0:
+                        if len(tmp_array[x][y][0]) < 5:
                             tmp_array[x][y][0].append(self.array[x][y][0].pop())
-                            
+                        else:
+                            break
+                                
         self.array = tmp_array
         self.turn += 1
                     
@@ -154,44 +163,51 @@ class TheMap:
             for y in range(0,self.pixHeight):
                 if len(self.array[x][y][0]) > 0:
                     pygame.draw.rect(screen,[255,0,0],[x*self.pixel,y*self.pixel,self.pixel,self.pixel])
+                    if len(self.array[x][y][1]) > 0:
+                        pygame.draw.polygon(screen,[0,255,0],[[x*self.pixel,y*self.pixel],[(x+1)*self.pixel,y*self.pixel],[x*self.pixel,(y+1)*self.pixel]])
                 elif len(self.array[x][y][1]) > 0:
                     pygame.draw.rect(screen,[0,255,0],[x*self.pixel,y*self.pixel,self.pixel,self.pixel])
-        
-        print 'draw successful'
             
 # Functions
 
 # Variables
-done = False    # loop until the user clicks the close button.
-t = 1			# turn count
 life = 12		# how many turns it takes for aggresive blob to die
 span = 5		# how many turns it takes for passive blob to reproduce
+
+done = False
+RUNNING, PAUSE = 0,1
+state = RUNNING
 
 # Pre-start set up
 theMap = TheMap(pixWidth,pixHeight,pixel)     # initalises theMap with blobs
 theMap.draw(screen)
+
 # -------- Main Program Loop -----------
 while not done:
     
     # --- Event loop (not yet fully useful)
+    
     for event in pygame.event.get():        # did user do something
         if event.type == pygame.KEYDOWN:    # if user pushed any key
-            while event.type in pygame.event.get() is not pygame.KEYDOWN:                     # then close the window
-                clock.tick(1)
-    # --- Game logic
-    theMap.moveBlobs()  # moves the Blobs around in the array
-    
-    theMap.actBlobs()   # aggressive Blobs eat Green ones, they all reproduce
-    
-    # --- Clear the screen
-    screen.fill(BLACK)
- 
-    # --- Drawing new screen
-    
-    theMap.draw(screen)
-    # --- Update screen with what was drawn
-    pygame.display.flip()
- 
-    # --- Limits frames per second
-    clock.tick(30)
-    t+=1
+            if event.key == pygame.K_SPACE: state = not state
+            if event.key == pygame.K_ESCAPE:
+                done = True
+                state = PAUSE
+            
+    if state == RUNNING:
+        # --- Game logic
+        theMap.moveBlobs()  # moves the Blobs around in the array
+        
+        theMap.actBlobs()   # aggressive Blobs eat Green ones, they all reproduce
+        
+        # --- Clear the screen
+        screen.fill(BLACK)
+     
+        # --- Drawing new screen
+        
+        theMap.draw(screen)
+        # --- Update screen with what was drawn
+        pygame.display.flip()
+     
+        # --- Limits frames per second
+        clock.tick(10)
